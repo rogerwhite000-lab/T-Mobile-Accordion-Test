@@ -14,10 +14,9 @@ export type AccordionProps = {
 
 /**
  * Accessible Accordion (TypeScript) with roving tabindex.
- * Roving tabindex behavior:
  * - Only the currently focusable header has tabindex=0, others -1.
- * - ArrowUp/ArrowDown/Home/End change which header is focusable and move focus.
- * ARIA: button with aria-expanded, aria-controls. Panel role=region with aria-labelledby.
+ * - ArrowUp / ArrowDown / Home / End move focus.
+ * - Enter / Space toggle the active item.
  */
 export default function Accordion({
   items,
@@ -25,14 +24,12 @@ export default function Accordion({
   className = '',
 }: AccordionProps) {
   const [openIds, setOpenIds] = useState<string[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0); // for roving tabindex
+  const [activeIndex, setActiveIndex] = useState(0);
   const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    // ensure refs length matches items length
     buttonsRef.current = buttonsRef.current.slice(0, items.length);
 
-    // clamp activeIndex if items change
     setActiveIndex((prev) => {
       if (items.length === 0) return 0;
       return prev > items.length - 1 ? 0 : prev;
@@ -50,34 +47,48 @@ export default function Accordion({
 
   const focusButton = (index: number) => {
     const btn = buttonsRef.current[index];
-    if (btn) {
-      btn.focus();
-    }
+    if (btn) btn.focus();
     setActiveIndex(index);
   };
 
+  // ✅ CLEANER KEYBOARD HANDLER
   const onKeyDown = (
     e: React.KeyboardEvent<HTMLButtonElement>,
     index: number
   ) => {
-    const { key } = e;
     const max = items.length - 1;
     let targetIndex: number | null = null;
 
-    if (key === 'ArrowDown') targetIndex = index + 1 > max ? 0 : index + 1;
-    if (key === 'ArrowUp') targetIndex = index - 1 < 0 ? max : index - 1;
-    if (key === 'Home') targetIndex = 0;
-    if (key === 'End') targetIndex = max;
+    switch (e.key) {
+      case 'ArrowDown':
+        targetIndex = index + 1 > max ? 0 : index + 1;
+        break;
+
+      case 'ArrowUp':
+        targetIndex = index - 1 < 0 ? max : index - 1;
+        break;
+
+      case 'Home':
+        targetIndex = 0;
+        break;
+
+      case 'End':
+        targetIndex = max;
+        break;
+
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        toggle(items[index].id);
+        return;
+
+      default:
+        return;
+    }
 
     if (targetIndex !== null) {
       e.preventDefault();
       focusButton(targetIndex);
-      return;
-    }
-
-    if (key === 'Enter' || key === ' ') {
-      e.preventDefault();
-      toggle(items[index].id);
     }
   };
 
@@ -105,7 +116,6 @@ export default function Accordion({
                 aria-controls={panelId}
                 onClick={() => {
                   toggle(item.id);
-                  // when clicking, make that button the roving focusable one
                   setActiveIndex(i);
                 }}
                 onKeyDown={(e) => onKeyDown(e, i)}
