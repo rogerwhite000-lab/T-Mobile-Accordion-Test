@@ -14,11 +14,9 @@ export type AccordionProps = {
 
 /**
  * Accessible Accordion (TypeScript) with roving tabindex.
- *
  * Roving tabindex behavior:
  * - Only the currently focusable header has tabindex=0, others -1.
  * - ArrowUp/ArrowDown/Home/End change which header is focusable and move focus.
- *
  * ARIA: button with aria-expanded, aria-controls. Panel role=region with aria-labelledby.
  */
 export default function Accordion({ items, allowMultiple = false, className = '' }: AccordionProps) {
