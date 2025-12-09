@@ -19,17 +19,25 @@ export type AccordionProps = {
  * - ArrowUp/ArrowDown/Home/End change which header is focusable and move focus.
  * ARIA: button with aria-expanded, aria-controls. Panel role=region with aria-labelledby.
  */
-export default function Accordion({ items, allowMultiple = false, className = '' }: AccordionProps) {
+export default function Accordion({
+  items,
+  allowMultiple = false,
+  className = '',
+}: AccordionProps) {
   const [openIds, setOpenIds] = useState<string[]>([]);
-  const [activeIndex, setActiveIndex] = useState<number>(0); // for roving tabindex
+  const [activeIndex, setActiveIndex] = useState(0); // for roving tabindex
   const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
     // ensure refs length matches items length
     buttonsRef.current = buttonsRef.current.slice(0, items.length);
-    // if activeIndex out of range (items changed), clamp
-    if (activeIndex > items.length - 1) setActiveIndex(0);
-  }, [items.length, activeIndex]);
+
+    // clamp activeIndex if items change
+    setActiveIndex((prev) => {
+      if (items.length === 0) return 0;
+      return prev > items.length - 1 ? 0 : prev;
+    });
+  }, [items.length]);
 
   const isOpen = (id: string) => openIds.includes(id);
 
@@ -48,8 +56,11 @@ export default function Accordion({ items, allowMultiple = false, className = ''
     setActiveIndex(index);
   };
 
-  const onKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const key = e.key;
+  const onKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    const { key } = e;
     const max = items.length - 1;
     let targetIndex: number | null = null;
 
@@ -70,12 +81,19 @@ export default function Accordion({ items, allowMultiple = false, className = ''
     }
   };
 
+  if (items.length === 0) return null;
+
   return (
-    <div className={`accordion ${className}`} role="presentation">
+    <div
+      className={`accordion ${className}`}
+      role="group"
+      aria-label="Accordion"
+    >
       {items.map((item, i) => {
         const buttonId = `accordion-button-${item.id}`;
         const panelId = `accordion-panel-${item.id}`;
         const expanded = isOpen(item.id);
+
         return (
           <div className="accordion__item" key={item.id}>
             <h3>
