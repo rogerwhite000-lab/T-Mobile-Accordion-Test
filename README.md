@@ -1,6 +1,6 @@
 # Accessible Accordion (TypeScript)
 
-This repository contains a small React + TypeScript project with a reusable, accessible Accordion (disclosure) component that implements a roving tabindex.
+This repository contains a small sized React + TypeScript project with a reusable, accessible Accordion (disclosure) component that implements a roving tabindex.
 
 ## What changed
 - Component converted to TypeScript (`src/components/Accordion.tsx`).
